@@ -1,47 +1,41 @@
 require("dotenv").config();
 
-var keys = require("./control.js");
+var keys = require("./keys.js");
 var bit = keys.bit.api_id;
 var Spotify = require('node-spotify-api');
 var spotify = new Spotify(keys.spotify);
 var omdbKey = keys.omdb.api_key;
 var request = require('request');
 var fs = require('fs');
+var axios = require('axios')
 
 
-const a = process.argv[2];
-const b = process.argv[3];
+const userInput = process.argv[2];
+const userQuery = process.argv.slice(3).join("-");
 
-switch (a) {
-    case ('concert-this'):
-        if (b) {
-            concerts(b);
-        } else {
-            concerts('Drake');
-        }
-        break;
-    case ('spotify-this-song'):
-        if (b) {
-            spotifyThisSong(b);
-        } else {
-            spotifyThisSong('Controlla');
-        }
-        break;
-    case ('movie-this'):
-        if (b) {
-            omdb(b);
-        } else {
-            omdb("The Matrix");
-        }
-        break;
-    case ('do'):
-        doThing();
-        break;
-    default:
-        console.log('Try again');
-};
+function userCommand(userInput, userQuery) {
+    switch (userInput) {
+        case "concert-this":
+            concerts();
+            break;
+        case "spotify-this-song":
+            spotifyThisSong();
+            break;
+        case "movie-this":
+            omdb();
+            break;
+        case "do-this":
+            doThis(userQuery);
+            break;
+        default:
+            console.log("idk")
+            break;
+    }
+}
+userCommand(userInput, userQuery)
+
 function concerts(artist) {
-    var bitURL = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=" + bit;
+    var bitURL = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp";
 
     request(bitURL, function (error, response) {
         if (!error && response.statusCode == 200) {
@@ -103,10 +97,16 @@ function omdb(movie) {
 
 }
 
-function doThing() {
-    fs.readFile('info.txt', "utf8", function (error, data) {
-        var txt = data.split(',');
+function doThis() {
+    fs.readFile('random.txt', "utf8", function (error, data) {
+        if (error) {
+            return console.log(error)
+        }
+        let dataArr = data.split(",")
 
-        spotifyThisSong(txt[1]);
+        userInput = dataArr[0]
+        userQuery=dataArr[1]
+
+        userCommand(userInput, userQuery)
     });
 }

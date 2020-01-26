@@ -9,5 +9,5 @@ exports.omdb = {
 
 
 exports.bit = {
-    api_id: process.env.BIT_API_ID
+    api_id: process.env.BIT_APP_ID
 };
