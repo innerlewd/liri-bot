@@ -4,10 +4,10 @@ exports.spotify = {
 };
 
 exports.omdb = {
-    api_key: process.env.OMDB_API_KEY
+    id: process.env.OMDB_ID
 };
 
 
 exports.bit = {
-    api_id: process.env.BIT_APP_ID
+    id: process.env.BIT_APP_ID
 };

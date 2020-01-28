@@ -7,11 +7,12 @@ var spotify = new Spotify(keys.spotify);
 var omdbKey = keys.omdb.api_key;
 var request = require('request');
 var fs = require('fs');
-var axios = require('axios')
+
+var moment = require('moment')
 
 
-const userInput = process.argv[2];
-const userQuery = process.argv.slice(3).join("-");
+let userInput = process.argv[2];
+let userQuery = process.argv.slice(3).join("-");
 
 function userCommand(userInput, userQuery) {
     switch (userInput) {
@@ -22,7 +23,7 @@ function userCommand(userInput, userQuery) {
             spotifyThisSong();
             break;
         case "movie-this":
-            omdb();
+            movie();
             break;
         case "do-this":
             doThis(userQuery);
@@ -34,68 +35,67 @@ function userCommand(userInput, userQuery) {
 }
 userCommand(userInput, userQuery)
 
-function concerts(artist) {
-    var bitURL = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp";
 
-    request(bitURL, function (error, response) {
-        if (!error && response.statusCode == 200) {
-            //   var body = JSON.parse(body);
-
-            console.log(response);
-
-
-        } else {
-            console.log('Error occurred.')
-        }
-
-    });
-
-}
-
-
-
-
-function spotifyThisSong(song) {
-    spotify.search({ type: 'track', query: song, limit: 1 }, function (error, data) {
-        if (!error) {
-            for (var i = 0; i < data.tracks.items.length; i++) {
-                var songData = data.tracks.items[i];
-                console.log("Artist: " + songData.artists[0].name);
-                console.log("Song: " + songData.name);
-                console.log("Preview URL: " + songData.preview_url);
-                console.log("Album: " + songData.album.name);
-                console.log("-----------------------");
+function concerts() {
+    console.log(`\n - - - - -\n\Searching for ${userQuery}'s next show.`);
+    request("https://rest.bandsintown.com/artists/" + userQuery + "/events?app_id=codingbootcamp", function 
+    (error, response, body) {
+        if (!error && response.statusCode === 200) {
+            let userBand = JSON.parse(body);
+            if (userBand.length > 0) {
+                for (i = 0; i < 1; i++) {
+                    console.log(`\nArtist: ${userBand[i].lineup[0]} \nVenue: ${userBand[i].venue.name}\nVenue Location: ${userBand[i].venue.latitude},${userBand[i].venue.longitude}\nVenue City: ${userBand[i].venue.city}, ${userBand[i].venue.country}`)
+                    let concertDate = moment(userBand[i].datetime).format("MM/DD/YYYY hh:00 A")
+                    console.log(`Date: ${concertDate}\n\n- - - - -`)
+                }
+            } else {
+                console.log('concert not found!')
             }
-        } else {
-            console.log('Error occurred.');
         }
+    })
+}
+
+
+
+
+function spotifyThisSong() {
+    console.log(`\n - - - - -\n\nsearching for "${userQuery}"`);
+    if (!userQuery) {
+        userQuery = "controlla"
+    };
+    spotify.search({
+        type: 'track',
+        query: userQuery,
+        limit: 1
+    }, function (error, data) {
+        if (error) {
+            return console.log('Error occurred: ' + error);
+        }
+        let spotifyArr = data.tracks.items;
+
+        for (i = 0; i < spotifyArr.length; i++) {
+            console.log(`\nArtist: ${data.tracks.items[i].album.artists[0].name} \nSong: ${data.tracks.items[i].name}\nAlbum: ${data.tracks.items[i].album.name}\nSpotify link: ${data.tracks.items[i].external_urls.spotify}\n\n - - - - -`)
+        };
     });
 }
 
-function omdb(movie) {
-    var omdbURL = 'http://www.omdbapi.com/?t=' + movie + '&apikey=' + omdbKey + '&plot=short&tomatoes=true';
+function movie() {
+    console.log(`\n - - - - -\n\nsearching for "${userQuery}"`);
+    if (!userQuery) {
+        userQuery = "the matrix";
+    }
+    request("http://www.omdbapi.com/?t=" + userQuery + "&apikey=6963b3aa", function (error, response, body) {
+        let userMovie = JSON.parse(body);
+        let ratingsArr = userMovie.Ratings;
+        if (undefined !== ratingsArr && ratingsArr.length > 2) {}
 
-    request(omdbURL, function (error, response, body) {
-        if (!error && response.statusCode == 200) {
-            var body = JSON.parse(body);
-
-            console.log("Title: " + body.Title);
-            console.log("Release Year: " + body.Year);
-            console.log("IMdB Rating: " + body.imdbRating);
-            console.log("Country: " + body.Country);
-            console.log("Language: " + body.Language);
-            console.log("Plot: " + body.Plot);
-            console.log("Actors: " + body.Actors);
-            console.log("Rotten Tomatoes Rating: " + body.tomatoRating);
-            console.log("Rotten Tomatoes URL: " + body.tomatoURL);
-
+        if (!error && response.statusCode === 200) {
+            console.log(`\nTitle: ${userMovie.Title}\nCast: ${userMovie.Actors}\nReleased: ${userMovie.Year}\nIMDb Rating: ${userMovie.imdbRating}\nRotten Tomatoes Rating: ${userMovie.Ratings[1].Value}\nCountry: ${userMovie.Country}\nLanguage: ${userMovie.Language}\nPlot: ${userMovie.Plot}\n\n- - - - -`)
         } else {
-            console.log('Error occurred.')
-        }
-        
-    });
-
-}
+            return console.log("Error:" + error)
+        };
+    })
+};
 
 function doThis() {
     fs.readFile('random.txt', "utf8", function (error, data) {
@@ -104,7 +104,7 @@ function doThis() {
         }
         let dataArr = data.split(",")
 
-        userInput = dataArr[0]
+        userInput=dataArr[0]
         userQuery=dataArr[1]
 
         userCommand(userInput, userQuery)
